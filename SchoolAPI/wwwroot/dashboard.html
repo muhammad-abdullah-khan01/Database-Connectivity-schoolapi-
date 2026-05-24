@@ -1,0 +1,261 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>Student Dashboard</title>
+
+    <style>
+
+        body {
+            font-family: Arial;
+            background: #f4f6f9;
+            margin: 40px;
+        }
+
+        h1 {
+            color: #1B4F72;
+            text-align: center;
+        }
+
+        h2 {
+            color: #2E86C1;
+        }
+
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        button {
+            background: #2E86C1;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            margin-top: 10px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 15px;
+            margin-right: 5px;
+        }
+
+            button:hover {
+                background: #1B4F72;
+            }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+        }
+
+        th {
+            background: #2E86C1;
+            color: white;
+            padding: 12px;
+        }
+
+        td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+
+        tr:nth-child(even) {
+            background: #f2f2f2;
+        }
+
+        .delete-btn {
+            background: #e74c3c;
+        }
+
+            .delete-btn:hover {
+                background: #c0392b;
+            }
+    </style>
+
+</head>
+
+<body>
+
+    <div class="container">
+
+        <h1>Student Dashboard</h1>
+
+        <h2>Add / Edit Student</h2>
+
+        <input type="text" id="name" placeholder="Name">
+        <input type="text" id="rollNumber" placeholder="Roll Number">
+        <input type="number" id="semester" placeholder="Semester">
+        <input type="number" id="marks" placeholder="Marks">
+
+        <button onclick="addStudent()">Save Student</button>
+
+        <h2>All Students</h2>
+
+        <button onclick="loadStudents()">Load Students</button>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Roll No</th>
+                    <th>Semester</th>
+                    <th>Marks</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+
+            <tbody id="tableBody"></tbody>
+        </table>
+
+    </div>
+
+    <script>
+
+        const API = "https://localhost:7162/api/Students";
+
+        let editId = null;
+
+        // LOAD STUDENTS
+        async function loadStudents() {
+
+            const response = await fetch(API);
+            const data = await response.json();
+
+            let rows = "";
+
+            data.forEach(s => {
+
+                rows += `
+            <tr>
+                <td>${s.name}</td>
+                <td>${s.rollNumber}</td>
+                <td>${s.semester}</td>
+                <td>${s.marks}</td>
+
+                <td>
+
+                    <button onclick="editStudent(
+                        ${s.id},
+                        '${s.name}',
+                        '${s.rollNumber}',
+                        ${s.semester},
+                        ${s.marks}
+                    )">
+                        Edit
+                    </button>
+
+                    <button class="delete-btn"
+                    onclick="deleteStudent(${s.id})">
+                        Delete
+                    </button>
+
+                </td>
+            </tr>`;
+            });
+
+            document.getElementById("tableBody").innerHTML = rows;
+        }
+
+        // ADD OR UPDATE STUDENT
+        async function addStudent() {
+
+            const name = document.getElementById("name").value;
+            const rollNumber = document.getElementById("rollNumber").value;
+            const semester = document.getElementById("semester").value;
+            const marks = document.getElementById("marks").value;
+
+            // VALIDATION
+            if (name === "" || rollNumber === "" || semester === "" || marks === "") {
+                alert("Please fill all fields");
+                return;
+            }
+
+            const student = {
+                name: name,
+                rollNumber: rollNumber,
+                semester: parseInt(semester),
+                marks: parseInt(marks)
+            };
+
+            // UPDATE
+            if (editId != null) {
+
+                await fetch(API + "/" + editId, {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(student)
+                });
+
+                alert("Student Updated");
+
+                editId = null;
+            }
+
+            // ADD
+            else {
+
+                await fetch(API, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(student)
+                });
+
+                alert("Student Added");
+            }
+
+            // CLEAR INPUTS
+            document.getElementById("name").value = "";
+            document.getElementById("rollNumber").value = "";
+            document.getElementById("semester").value = "";
+            document.getElementById("marks").value = "";
+
+            loadStudents();
+        }
+
+        // DELETE STUDENT
+        async function deleteStudent(id) {
+
+            await fetch(API + "/" + id, {
+                method: "DELETE"
+            });
+
+            alert("Student Deleted");
+
+            loadStudents();
+        }
+
+        // EDIT STUDENT
+        function editStudent(id, name, rollNumber, semester, marks) {
+
+            editId = id;
+
+            document.getElementById("name").value = name;
+            document.getElementById("rollNumber").value = rollNumber;
+            document.getElementById("semester").value = semester;
+            document.getElementById("marks").value = marks;
+
+        }
+
+        // AUTO LOAD
+        loadStudents();
+
+    </script>
+
+</body>
+</html>

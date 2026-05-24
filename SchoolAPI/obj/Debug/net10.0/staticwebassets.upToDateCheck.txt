@@ -1,0 +1,2 @@
+wwwroot\dashboard.html
+F:\muhammad abdullah 2504637\lab 9 ,10\SchoolAPI\SchoolAPI\wwwroot\dashboard.html
